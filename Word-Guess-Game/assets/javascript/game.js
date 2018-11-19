@@ -18,12 +18,6 @@ function toggleMain() {
         toggleButton.classList.add("btn-outline-success");
     }
 
-    /* if (toggleContent.style.display == "") {
-        endGame();
-    } else {
-        startGame();
-    } */
-
     (toggleContent.dataset.toggled ^= 1) ? startGame() : endGame();
 }
 
@@ -42,38 +36,45 @@ let game = {
     updateAppName: function (val) {
         this.appName = val;
     },
+
     updateAppHint: function (val) {
         this.appHint = val;
     },
+
     updateNumberOfLetters: function (val) {
         this.numberOfLetters = val;
     },
+
     updateLetterChosen: function (val1, val2) {
+        let elementNode = document.getElementById("guessedLetters");
         if (val2) {
             this.letterChosen = val1;
             let element = document.createElement("p");
             element.appendChild(document.createTextNode(val1));
             element.style.cssText = "display:inline-block;padding-right:5px;";
-            document.getElementById("guessedLetters").appendChild(element);
+            elementNode.appendChild(element);
         } else {
-            let elementNode = document.getElementById("guessedLetters");
             while (elementNode.firstChild) {
                 elementNode.removeChild(elementNode.firstChild);
             }
             this.numberOfLettersMatched = 0;
         }
     },
+
     updateNumberOfTotalTries: function (val) {
         this.numberOfTotalTries = val;
     },
+
     updateNumberOfTriesRemaining: function (val) {
         this.numberOfTriesRemaining = val;
         document.getElementById("guessesLeftCount").innerText = val;
     },
+
     updateNumberOfWins: function (val) {
         this.numberOfWins = val;
         document.getElementById("winCount").innerText = val;
     },
+
     updateNumberOfLosses: function (val) {
         this.numberOfLosses = val;
         document.getElementById("lossCount").innerText = val;
@@ -90,6 +91,7 @@ let game = {
     },
 
     updateDashes: function (val) {
+        let elementNode = document.getElementById("currentApp")
         if (val) {
             for (let i = 0; i < this.numberOfLetters; i++) {
                 let element = document.createElement("p");
@@ -98,11 +100,37 @@ let game = {
                 setAttributes(element, {
                     "class": this.appName.charAt(i) + "_char"
                 });
-
-                document.getElementById("currentApp").appendChild(element);
+                elementNode.appendChild(element);
             }
         } else {
-            let elementNode = document.getElementById("currentApp");
+            while (elementNode.firstChild) {
+                elementNode.removeChild(elementNode.firstChild);
+            }
+        }
+    },
+
+    updateAppHeader: function (val) {
+        let elementNode = document.getElementById("appHeader");
+        if (val) {
+            elementNode.innerHTML = this.appName;
+        } else {
+            while (elementNode.firstChild) {
+                elementNode.removeChild(elementNode.firstChild);
+            }
+        }
+    },
+
+    updateAppImage: function (val) {
+        let elementNode = document.getElementById("appImage")
+        if (val) {
+            let element = document.createElement("img");
+            setAttributes(element, {
+                "class": "m-2",
+                "src": "./assets/images/" + this.appName + ".png",
+                "alt": "App Image"
+            });
+            elementNode.appendChild(element);
+        } else {
             while (elementNode.firstChild) {
                 elementNode.removeChild(elementNode.firstChild);
             }
@@ -120,6 +148,8 @@ let game = {
         this.updateNumberOfLosses(0);
         this.updateAppLetters(false);
         this.updateDashes(false);
+        this.updateAppHeader(false);
+        this.updateAppImage(false);
     },
 }
 
@@ -165,6 +195,7 @@ function shuffleAppList(arr) {
 }
 
 function startGame() {
+
     appList = shuffleAppList(appList);
 
     let appListCount = appList.length;
@@ -174,10 +205,12 @@ function startGame() {
     game.updateNumberOfWins(totalWinCount);
     game.updateNumberOfLosses(totalLossCount);
 
-    for (let i = 0; i < appListCount.length; i++) {
+    let i = 0;
+    for (i = 0; i < appListCount; i++) {
+        game.updateAppHeader(false);
+        game.updateAppImage(false);
         game.updateDashes(false);
         game.updateLetterChosen("", false);
-
         let appNameChosen = appList[i].n;
         game.updateAppName(appNameChosen);
 
@@ -185,15 +218,13 @@ function startGame() {
         game.updateAppHint(appNameHintChosen);
 
         game.updateNumberOfLetters(appNameChosen.length);
+        game.updateAppLetters(true);
+        game.updateDashes(true);
         game.updateNumberOfTotalTries(appNameChosen.length);
         game.updateNumberOfTriesRemaining(appNameChosen.length);
 
-        game.updateAppLetters(true);
-        game.updateDashes(true);
-
         for (let i = 0; i < appNameChosen.length; i++) {
             document.onkeyup = function (event) {
-
                 let userInput = event.key.toLowerCase();
 
                 game.updateNumberOfTriesRemaining(game.numberOfTriesRemaining - 1);
@@ -207,9 +238,17 @@ function startGame() {
                         game.numberOfLettersMatched++;
                     }
                 }
+                if (game.numberOfTriesRemaining != game.numberOfTotalTries) {
+                    scoreUpdate();
+                }
             }
+
+            /*             if (game.numberOfTriesRemaining < 1) {
+                            alter("You won this round");
+                            game.reset();
+                            break; 
+                        } */
         }
-        scoreUpdate();
     }
 }
 
@@ -224,19 +263,19 @@ function setAttributes(el, attrs) {
 }
 
 function resetGame() {
+    game.updateAppHeader(false);
+    game.updateAppImage(false);
     game.updateDashes(false);
     game.updateLetterChosen("", false);
     startGame();
 }
 
 function scoreUpdate() {
-    if (game.numberOfTriesRemaining != game.numberOfTotalTries) {
-        if (appNameChosen.length === game.numberOfLettersMatched) {
-            game.updateNumberOfWins(totalWinCount + 1);
-        } else if (game.numberOfTriesRemaining === 0) {
-            game.updateNumberOfLosses(totalLossCount + 1);
-        } else {
-            alert("NO Change!");
-        }
-    } else { alert("Starting!") };
+    if (game.numberOfTriesRemaining >= 0 && game.numberOfLetters === game.numberOfLettersMatched) {
+        game.updateNumberOfWins(game.numberOfWins + 1);
+        game.updateAppHeader(true)
+        game.updateAppImage(true);
+    } else if (game.numberOfTriesRemaining === 0 && game.numberOfLetters > game.numberOfLettersMatche) {
+        game.updateNumberOfLosses(game.numberOfLosses + 1);
+    }
 }
