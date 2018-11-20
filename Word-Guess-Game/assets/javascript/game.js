@@ -1,9 +1,51 @@
+let appList = [{
+        n: "facebook",
+        h: "Was launched by Mark Zuckerberg"
+    },
+    {
+        n: "instagram",
+        h: "Was created by Kevin Systrom and Mike Krieger"
+    },
+    {
+        n: "linkedin",
+        h: "It's a business and employment-oriented service that operates via websites and mobile apps"
+    },
+    {
+        n: "snapchat",
+        h: "Was created by Evan Spiegel, Bobby Murphy, Reggie Brown"
+    },
+    {
+        n: "twitter",
+        h: "Originally, the content was restricted to 140 characters"
+    },
+    {
+        n: "youtube",
+        h: "Used to view videos and owned by the Goog"
+    }
+];
+
+function shuffleAppList(arr) {
+    let i = arr.length;
+    let temp;
+    let arrayIndex;
+
+    while (i > 0) {
+        arrayIndex = Math.floor(Math.random() * i);
+        i--;
+        temp = arr[i];
+        arr[i] = arr[arrayIndex];
+        arr[arrayIndex] = temp;
+    }
+    return arr;
+}
+
 function toggleMain() {
     let toggleContent = document.getElementById("mainContent");
     let toggleButton = document.getElementById("startGame");
 
     if (toggleContent.style.display == "") {
         toggleContent.style.display = "block";
+        appList = shuffleAppList(appList);
     } else {
         toggleContent.style.display = "";
     }
@@ -18,7 +60,7 @@ function toggleMain() {
         toggleButton.classList.add("btn-outline-success");
     }
 
-    (toggleContent.dataset.toggled ^= 1) ? startGame() : endGame();
+    (toggleContent.dataset.toggled ^= 1) ? startGame(): endGame();
 }
 
 let game = {
@@ -39,6 +81,7 @@ let game = {
 
     updateAppHint: function (val) {
         this.appHint = val;
+        document.getElementById("currentAppHint").innerText = "Hint: " + val;
     },
 
     updateNumberOfLetters: function (val) {
@@ -153,68 +196,19 @@ let game = {
     },
 }
 
-let appList = [{
-    n: "facebook",
-    h: "Was launched by Mark Zuckerberg"
-},
-{
-    n: "instagram",
-    h: "Was created by Kevin Systrom and Mike Krieger"
-},
-{
-    n: "linkedin",
-    h: "It's a business and employment-oriented service that operates via websites and mobile apps"
-},
-{
-    n: "snapchat",
-    h: "Was created by Evan Spiegel, Bobby Murphy, Reggie Brown"
-},
-{
-    n: "twitter",
-    h: "Originally, the content was restricted to 140 characters"
-},
-{
-    n: "youtube",
-    h: "Used to view videos and owned by the Goog"
-}
-];
-
-function shuffleAppList(arr) {
-    let i = arr.length;
-    let temp;
-    let arrayIndex;
-
-    while (i > 0) {
-        arrayIndex = Math.floor(Math.random() * i);
-        i--;
-        temp = arr[i];
-        arr[i] = arr[arrayIndex];
-        arr[arrayIndex] = temp;
-    }
-    return arr;
-}
-
 function startGame() {
-
-    appList = shuffleAppList(appList);
-
     let appListCount = appList.length;
-    let totalWinCount = 0;
-    let totalLossCount = 0;
 
-    game.updateNumberOfWins(totalWinCount);
-    game.updateNumberOfLosses(totalLossCount);
-
-    let i = 0;
-    for (i = 0; i < appListCount; i++) {
+    let counter = game.numberOfLosses + game.numberOfWins;
+    if (counter < appListCount) {
         game.updateAppHeader(false);
         game.updateAppImage(false);
         game.updateDashes(false);
         game.updateLetterChosen("", false);
-        let appNameChosen = appList[i].n;
+        let appNameChosen = appList[counter].n;
         game.updateAppName(appNameChosen);
 
-        let appNameHintChosen = appList[i].h;
+        let appNameHintChosen = appList[counter].h;
         game.updateAppHint(appNameHintChosen);
 
         game.updateNumberOfLetters(appNameChosen.length);
@@ -238,17 +232,25 @@ function startGame() {
                         game.numberOfLettersMatched++;
                     }
                 }
-                if (game.numberOfTriesRemaining != game.numberOfTotalTries) {
+                if (game.numberOfTriesRemaining < game.numberOfTotalTries) {
                     scoreUpdate();
                 }
             }
-
-            /*             if (game.numberOfTriesRemaining < 1) {
-                            alter("You won this round");
-                            game.reset();
-                            break; 
-                        } */
         }
+    }
+
+    if (game.numberOfTriesRemaining < 1 || counter != game.numberOfLosses + game.numberOfWins) {
+        game.updateAppImage(false);
+        game.updateDashes(false);
+        if (game.numberOfWins > game.numberOfLosses) {
+            alert("YOU WON!!")
+        } else if (game.numberOfWins < game.numberOfLosses) {
+            alert("YOU LOST!!")
+        } else {
+            alert("IT'S A TIE!!")
+        }
+        game.updateNumberOfWins(0);
+        game.updateNumberOfLosses(0);
     }
 }
 
@@ -263,11 +265,14 @@ function setAttributes(el, attrs) {
 }
 
 function resetGame() {
+    game.updateNumberOfTriesRemaining(0);
+    game.updateNumberOfTotalTries(0);
     game.updateAppHeader(false);
     game.updateAppImage(false);
     game.updateDashes(false);
     game.updateLetterChosen("", false);
     startGame();
+
 }
 
 function scoreUpdate() {
@@ -275,7 +280,13 @@ function scoreUpdate() {
         game.updateNumberOfWins(game.numberOfWins + 1);
         game.updateAppHeader(true)
         game.updateAppImage(true);
-    } else if (game.numberOfTriesRemaining === 0 && game.numberOfLetters > game.numberOfLettersMatche) {
+        setTimeout(function () {
+            resetGame()
+            alert("You won this round")
+        }, 1000);
+    } else if (game.numberOfTriesRemaining === 0) {
         game.updateNumberOfLosses(game.numberOfLosses + 1);
+        alert("You lost this round")
+        resetGame();
     }
 }
